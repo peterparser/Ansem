@@ -9,10 +9,11 @@ import (
 	"time"
 )
 
-func StartSubmitter(gameServer string, toSubmit <-chan string) {
-
+func StartSubmitter(gameServer string, toSubmit <-chan string, subType string) {
+	//Init submitters
+	var submitHandler = make(map[string]func(string, <-chan string, chan<- string))
+	submitHandler["TCP"] = submitNC
 	//Define submission method
-	submitFunction := submitNC
 
 	//Create a map to verify flags
 	submitted := make(map[string]bool)
@@ -37,8 +38,7 @@ func StartSubmitter(gameServer string, toSubmit <-chan string) {
 	}()
 
 	//Start the submitter
-	go submitFunction(gameServer, flagChannel, mapWrite)
-
+	go submitHandler[subType](gameServer, flagChannel, mapWrite)
 	//Check if the flags are already submitted
 	for flag := range toSubmit {
 		mapRead <- flag

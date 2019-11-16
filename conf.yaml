@@ -1,4 +1,6 @@
-exploits_dir: "/home/hello/my/dear/exploit/"
+exploits_dir: "/path/to/exploits"
 tick: 5
+team_file : "/path/to/teams"
 gameserver: "127.0.0.1:31337"
 workers: 8
+submission_type: "TCP"
