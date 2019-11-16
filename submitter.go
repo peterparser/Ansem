@@ -84,7 +84,5 @@ func submitNC(gameServer string, flagChannel <-chan string, handler chan<- strin
 				log.Fatalf("Error in connection with %s\n", gameServer)
 			}
 		}
-
 	}
-
 }
