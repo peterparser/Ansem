@@ -1,0 +1,4 @@
+exploits_dir: "/home/hello/my/dear/exploit/"
+tick: 5
+gameserver: "127.0.0.1:31337"
+workers: 8
