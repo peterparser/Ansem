@@ -3,6 +3,11 @@ YAML library
 ```
 go get gopkg.in/yaml.v2
 ```
+Then compile it with:
+```
+go build -o ansem 
+```
+
 
 # Configuration
 The configuration is stored in yaml file with the following (mandatory) attributes:
