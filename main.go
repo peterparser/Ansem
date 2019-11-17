@@ -5,7 +5,9 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
+	"os"
 	"sync"
+	"text/tabwriter"
 )
 
 type conf struct {
@@ -26,8 +28,13 @@ func main() {
 		c.Directory = fmt.Sprintf("%s/", c.Directory)
 	}
 
-	fmt.Printf("Hi, I'm starting with these settings:\n\nExploits Dir:\t%s\nGameserver:\t%s\nTeamfile:\t%s\nTick:\t%d\nWorkers:\t%d\n",
+	//Aligned print
+	writer := new(tabwriter.Writer)
+	writer.Init(os.Stdout, 0, 8, 0, '\t', 0)
+	_, _ = fmt.Fprintf(writer, "Hi, I'm starting with these settings:\n\nExploits Dir:\t%s\nGameserver:\t%s\nTeamfile:\t%s\nTick:\t%d\nWorkers:\t%d\n",
 		c.Directory, c.GameServer, c.TeamFile, c.Tick, c.Workers)
+	writer.Flush()
+
 	toSubmit := make(chan string, 20)
 
 	wg := sync.WaitGroup{}
