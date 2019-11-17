@@ -18,7 +18,7 @@ jobs:
 
     - name: Get dependencies
       run: |
-        go get -v -t -d "gopkg.in/yaml.v2
+        go get -v -t -d "gopkg.in/yaml.v2"
         if [ -f Gopkg.toml ]; then
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
             dep ensure
