@@ -8,6 +8,7 @@ Then compile it with:
 go build -o ansem 
 ```
 
+![](https://github.com/PeterParser/Ansem/workflows/Go/badge.svg)
 
 # Configuration
 The configuration is stored in yaml file with the following (mandatory) attributes:
