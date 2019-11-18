@@ -16,6 +16,7 @@ func StartSubmitter(submitterCtx context.Context) {
 	gameServer := submitterCtx.Value("gameServer").(string)
 	toSubmit := submitterCtx.Value("submit").(chan string)
 	subType := submitterCtx.Value("subType").(string)
+	flagAccepted := submitterCtx.Value("flagAccepted").(string)
 	flagRegex, err := regexp.Compile(submitterCtx.Value("flagRegex").(string))
 
 	if err != nil {
@@ -23,7 +24,7 @@ func StartSubmitter(submitterCtx context.Context) {
 	}
 
 	//Init submitters
-	var submitHandler = make(map[string]func(string, <-chan string, chan<- string))
+	var submitHandler = make(map[string]func(string, string, <-chan string, chan<- string))
 	submitHandler["TCP"] = submitNC
 	//Define submission method
 
@@ -50,7 +51,7 @@ func StartSubmitter(submitterCtx context.Context) {
 	}()
 
 	//Start the submitter
-	go submitHandler[subType](gameServer, flagChannel, mapWrite)
+	go submitHandler[subType](gameServer, flagAccepted, flagChannel, mapWrite)
 	//Check if the flags are already submitted
 	for flag := range toSubmit {
 		mapRead <- flag
@@ -66,7 +67,7 @@ func StartSubmitter(submitterCtx context.Context) {
 
 }
 
-func submitNC(gameServer string, flagChannel <-chan string, handler chan<- string) {
+func submitNC(gameServer string, acceptedFlag string, flagChannel <-chan string, handler chan<- string) {
 
 	//Create the tcp connection
 	connection, err := net.DialTimeout("tcp", gameServer, 10*time.Second)
@@ -85,7 +86,7 @@ func submitNC(gameServer string, flagChannel <-chan string, handler chan<- strin
 			//Read the response
 			response, _ := reader.ReadString('\n')
 			//If it's accepted, store it
-			if strings.Contains(response, "ACCEPTED") {
+			if strings.Contains(response, acceptedFlag) {
 				handler <- flag
 
 			}

@@ -19,6 +19,7 @@ type conf struct {
 	TeamFile       string `yaml:"team_file"`
 	SubmissionType string `yaml:"submission_type"`
 	FlagRegex      string `yaml:"flag_regex"`
+	FlagAccepted   string `yaml:"flag_accepted"`
 }
 
 func main() {
@@ -61,6 +62,7 @@ func main() {
 	submitterCtx = context.WithValue(submitterCtx, "submit", toSubmit)
 	submitterCtx = context.WithValue(submitterCtx, "flagRegex", c.FlagRegex)
 	submitterCtx = context.WithValue(submitterCtx, "subType", c.SubmissionType)
+	submitterCtx = context.WithValue(submitterCtx, "flagAccepted", c.FlagAccepted)
 
 	go func() {
 		defer wg.Done()

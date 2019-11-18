@@ -19,6 +19,7 @@ The configuration is stored in yaml file with the following (mandatory) attribut
 * **workers**: The number of workers
 * **submission_type**: The type of submission required by the game server, at the moment only "TCP" is supported.
 * **flag_regex**: The regex of the flag to be submitted.
+* **flag_accepted**: The string sent by the server that tells us if the flag was right or not.
 
 Example:
 ```yaml
@@ -29,4 +30,5 @@ gameserver: "127.0.0.1:31337"
 workers: 8
 submission_type: "TCP"
 flag_regex: "\\d"
+flag_accepted: "ACCEPTED"
 ```

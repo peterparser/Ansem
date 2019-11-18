@@ -5,3 +5,4 @@ gameserver: "127.0.0.1:31337"
 workers: 8
 submission_type: "TCP"
 flag_regex: "\\d"
+flag_accepted: "ACCEPTED"
