@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -17,6 +18,7 @@ type conf struct {
 	Workers        int    `yaml:"workers"`
 	TeamFile       string `yaml:"team_file"`
 	SubmissionType string `yaml:"submission_type"`
+	FlagRegex      string `yaml:"flag_regex"`
 }
 
 func main() {
@@ -31,21 +33,42 @@ func main() {
 	//Aligned print
 	writer := new(tabwriter.Writer)
 	writer.Init(os.Stdout, 0, 8, 0, '\t', 0)
-	_, _ = fmt.Fprintf(writer, "Hi, I'm starting with these settings:\n\nExploits Dir:\t%s\nGameserver:\t%s\nTeamfile:\t%s\nTick:\t%d\nWorkers:\t%d\n",
-		c.Directory, c.GameServer, c.TeamFile, c.Tick, c.Workers)
+	_, _ = fmt.Fprintf(writer, "Hi, I'm starting with these settings:\n\n"+
+		"Exploits Dir:\t%s\n"+
+		"Gameserver:\t%s\n"+
+		"Teamfile:\t%s\n"+
+		"SubmissionType:\t%s\n"+
+		"Flag Regex:\t%s\n"+
+		"Tick:\t%d\n"+
+		"Workers:\t%d\n",
+		c.Directory, c.GameServer, c.TeamFile, c.SubmissionType, c.FlagRegex, c.Tick, c.Workers)
 	writer.Flush()
 
 	toSubmit := make(chan string, 20)
 
 	wg := sync.WaitGroup{}
 	wg.Add(2)
+
+	exploitCtx := context.Background()
+	exploitCtx = context.WithValue(exploitCtx, "exploitDir", c.Directory)
+	exploitCtx = context.WithValue(exploitCtx, "tick", c.Tick)
+	exploitCtx = context.WithValue(exploitCtx, "fileTeam", c.TeamFile)
+	exploitCtx = context.WithValue(exploitCtx, "workers", c.Workers)
+	exploitCtx = context.WithValue(exploitCtx, "submit", toSubmit)
+
+	submitterCtx := context.Background()
+	submitterCtx = context.WithValue(submitterCtx, "gameServer", c.GameServer)
+	submitterCtx = context.WithValue(submitterCtx, "submit", toSubmit)
+	submitterCtx = context.WithValue(submitterCtx, "flagRegex", c.FlagRegex)
+	submitterCtx = context.WithValue(submitterCtx, "subType", c.SubmissionType)
+
 	go func() {
 		defer wg.Done()
-		StartExploiter(c.Directory, toSubmit, c.TeamFile, c.Tick, c.Workers)
+		StartExploiter(exploitCtx)
 	}()
 	go func() {
 		defer wg.Done()
-		StartSubmitter(c.GameServer, toSubmit, c.SubmissionType)
+		StartSubmitter(submitterCtx)
 	}()
 	wg.Wait()
 }

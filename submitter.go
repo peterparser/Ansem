@@ -2,14 +2,26 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"log"
 	"net"
+	"regexp"
 	"strings"
 	"time"
 )
 
-func StartSubmitter(gameServer string, toSubmit <-chan string, subType string) {
+func StartSubmitter(submitterCtx context.Context) {
+
+	gameServer := submitterCtx.Value("gameServer").(string)
+	toSubmit := submitterCtx.Value("submit").(chan string)
+	subType := submitterCtx.Value("subType").(string)
+	flagRegex, err := regexp.Compile(submitterCtx.Value("flagRegex").(string))
+
+	if err != nil {
+		log.Fatalf("Invalid regexp\n")
+	}
+
 	//Init submitters
 	var submitHandler = make(map[string]func(string, <-chan string, chan<- string))
 	submitHandler["TCP"] = submitNC
@@ -43,7 +55,9 @@ func StartSubmitter(gameServer string, toSubmit <-chan string, subType string) {
 	for flag := range toSubmit {
 		mapRead <- flag
 		present := <-mapGet
-		if present {
+		matched := flagRegex.MatchString(flag)
+		//If is present or doesn't match the flag regexp continue
+		if present || !matched {
 			continue
 		} else {
 			flagChannel <- flag
@@ -66,6 +80,7 @@ func submitNC(gameServer string, flagChannel <-chan string, handler chan<- strin
 		//Read the flag
 		case flag := <-flagChannel:
 			//Send the flag
+			fmt.Printf("Sto per inviare %s\n", flag)
 			fmt.Fprintf(connection, "%s\n", flag)
 			//Read the response
 			response, _ := reader.ReadString('\n')
