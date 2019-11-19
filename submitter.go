@@ -8,10 +8,12 @@ import (
 	"net"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 )
 
-func StartSubmitter(submitterCtx context.Context) {
+func StartSubmitter(submitterCtx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
 
 	gameServer := submitterCtx.Value("gameServer").(string)
 	toSubmit := submitterCtx.Value("submit").(chan string)
@@ -81,7 +83,7 @@ func submitNC(gameServer string, acceptedFlag string, flagChannel <-chan string,
 		//Read the flag
 		case flag := <-flagChannel:
 			//Send the flag
-			fmt.Printf("Sto per inviare %s\n", flag)
+			fmt.Printf("Sent: %s\n", flag)
 			fmt.Fprintf(connection, "%s\n", flag)
 			//Read the response
 			response, _ := reader.ReadString('\n')

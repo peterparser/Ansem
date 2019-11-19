@@ -79,13 +79,8 @@ func main() {
 	submitterCtx = context.WithValue(submitterCtx, "subType", c.SubmissionType)
 	submitterCtx = context.WithValue(submitterCtx, "flagAccepted", c.FlagAccepted)
 
-	go func() {
-		defer wg.Done()
-		StartExploiter(exploitCtx)
-	}()
-	go func() {
-		defer wg.Done()
-		StartSubmitter(submitterCtx)
-	}()
+	go StartExploiter(exploitCtx, &wg)
+	go StartSubmitter(submitterCtx, &wg)
+
 	wg.Wait()
 }
