@@ -22,6 +22,21 @@ type conf struct {
 	FlagAccepted   string `yaml:"flag_accepted"`
 }
 
+// Function that initialize the config
+func (c *conf) getConf() *conf {
+
+	yamlFile, err := ioutil.ReadFile("conf.yaml")
+	if err != nil {
+		log.Printf("yamlFile.Get err   #%v ", err)
+	}
+	err = yaml.Unmarshal(yamlFile, c)
+	if err != nil {
+		log.Fatalf("Unmarshal: %v", err)
+	}
+
+	return c
+}
+
 func main() {
 	var c conf
 	c.getConf()
@@ -73,18 +88,4 @@ func main() {
 		StartSubmitter(submitterCtx)
 	}()
 	wg.Wait()
-}
-
-func (c *conf) getConf() *conf {
-
-	yamlFile, err := ioutil.ReadFile("conf.yaml")
-	if err != nil {
-		log.Printf("yamlFile.Get err   #%v ", err)
-	}
-	err = yaml.Unmarshal(yamlFile, c)
-	if err != nil {
-		log.Fatalf("Unmarshal: %v", err)
-	}
-
-	return c
 }

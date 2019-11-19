@@ -13,7 +13,7 @@ go build -o ansem
 # Configuration
 The configuration is stored in yaml file with the following (mandatory) attributes:
 * **exploits_dir**: Path to the directory that contains the exploits.
-* **tick**: The tick of the gameserver in seconds.
+* **tick**: The tick of the gameserver in minutes.
 * **team_file**: Path to a plain text file with the ip of the teams.
 * **gameserver**: IP address and port of the gameserver in the following format "IP:port".
 * **workers**: The number of workers
