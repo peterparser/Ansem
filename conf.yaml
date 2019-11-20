@@ -1,8 +1,9 @@
-exploits_dir: "/path/to/exploits"
-tick: 5
-team_file : "/path/to/teams"
-gameserver: "127.0.0.1:31337"
+exploits_dir: "./expl/"
+tick: 1
+team_file : "team"
+gameserver: "http://dev.tripi.eu/ru.php"
 workers: 8
-submission_type: "TCP"
-flag_regex: "\\d"
-flag_accepted: "ACCEPTED"
+submission_type: "HTTP"
+flag_regex: "A.*"
+flag_accepted: "true"
+token: "cristo"

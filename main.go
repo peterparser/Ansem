@@ -14,12 +14,13 @@ import (
 type conf struct {
 	Directory      string `yaml:"exploits_dir"`
 	Tick           int    `yaml:"tick"`
+	TeamFile       string `yaml:"team_file"`
 	GameServer     string `yaml:"gameserver"`
 	Workers        int    `yaml:"workers"`
-	TeamFile       string `yaml:"team_file"`
 	SubmissionType string `yaml:"submission_type"`
 	FlagRegex      string `yaml:"flag_regex"`
 	FlagAccepted   string `yaml:"flag_accepted"`
+	Token          string `yaml:"token"`
 }
 
 // Function that initialize the config
@@ -56,8 +57,10 @@ func main() {
 		"SubmissionType:\t%s\n"+
 		"Flag Regex:\t%s\n"+
 		"Tick:\t%d\n"+
-		"Workers:\t%d\n",
-		c.Directory, c.GameServer, c.TeamFile, c.SubmissionType, c.FlagRegex, c.Tick, c.Workers)
+		"Workers:\t%d\n"+
+		"Token:\t%s\n",
+
+		c.Directory, c.GameServer, c.TeamFile, c.SubmissionType, c.FlagRegex, c.Tick, c.Workers,c.Token)
 	writer.Flush()
 
 	toSubmit := make(chan string, 20)
@@ -71,6 +74,7 @@ func main() {
 	exploitCtx = context.WithValue(exploitCtx, "fileTeam", c.TeamFile)
 	exploitCtx = context.WithValue(exploitCtx, "workers", c.Workers)
 	exploitCtx = context.WithValue(exploitCtx, "submit", toSubmit)
+	exploitCtx = context.WithValue(exploitCtx, "flagRegex", c.FlagRegex)
 
 	submitterCtx := context.Background()
 	submitterCtx = context.WithValue(submitterCtx, "gameServer", c.GameServer)
@@ -78,6 +82,7 @@ func main() {
 	submitterCtx = context.WithValue(submitterCtx, "flagRegex", c.FlagRegex)
 	submitterCtx = context.WithValue(submitterCtx, "subType", c.SubmissionType)
 	submitterCtx = context.WithValue(submitterCtx, "flagAccepted", c.FlagAccepted)
+	submitterCtx = context.WithValue(submitterCtx, "token", c.Token)
 
 	go StartExploiter(exploitCtx, &wg)
 	go StartSubmitter(submitterCtx, &wg)
