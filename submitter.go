@@ -10,14 +10,19 @@ import (
 	"sync"
 	"time"
 	"net/http"
-	"crypto/tls"
+//	"crypto/tls"
 	"bytes"
-	"io/ioutil"
+	"encoding/json"
 )
 
-func jsonRuCTF(flag string)[]byte{
-	encode:=fmt.Sprintf("[\"%s\"]}",flag)
-	return []byte(encode)
+
+type RuCtf struct {
+	Reponses []FlagStatus
+}
+type FlagStatus struct {
+	Msg    string `json:"msg"`
+	Flag   string `json:"flag"`
+	Status bool   `json:"status"`
 }
 
 
@@ -84,7 +89,7 @@ func StartSubmitter(submitterCtx context.Context, wg *sync.WaitGroup) {
 }
 
 func submitHTTP(gameServer string, acceptedFlag string, flagChannel <-chan string, handler chan<- string, token string) {
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	//http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	//Create the tcp connection
 	for {
@@ -93,8 +98,13 @@ func submitHTTP(gameServer string, acceptedFlag string, flagChannel <-chan strin
 		//Read the flag
 		case flag := <-flagChannel:
 			//Send the flag
-			flagJson := jsonRuCTF(flag)
-			req, err := http.NewRequest("PUT", gameServer, bytes.NewBuffer(flagJson))
+
+			flagJson,err := json.Marshal([]string{flag})
+			if err != nil {
+				log.Fatalf("Error in json marshal with %s %s\n", gameServer,err)
+			}
+			req, err := http.NewRequest("PUT",gameServer,bytes.NewBuffer(flagJson))
+
 			req.Header.Set("X-Team-Token",token)
 			if err != nil {
 				log.Fatalf("Error in connection http  with %s %s\n", gameServer,err)
@@ -107,15 +117,20 @@ func submitHTTP(gameServer string, acceptedFlag string, flagChannel <-chan strin
 			if err != nil {
 				log.Fatalf("Error in sending flag with %s %s\n", gameServer,err)
 			}
-			fmt.Printf("Sent: %s\n", flag)
-			fmt.Printf("response status %s",resp.Status)
-			response, err := ioutil.ReadAll(resp.Body)
-			if err!= nil {
-				log.Fatalf("Error in receving answer with %s %s\n", gameServer,err)
-			}
-			if strings.Contains(string(response), acceptedFlag) {
-				handler <- flag
+			fmt.Printf("Sent: %s\n", flagJson)
+			fmt.Printf("Status: %s\n", resp.Status)
+			var flagResult RuCtf
+			json.NewDecoder(resp.Body).Decode(flagResult)
+			defer resp.Body.Close()
 
+			fmt.Printf("response body%s\n",resp.Body)
+			for _, flagStatus := range flagResult.Reponses {
+				if flagStatus.Status {
+					fmt.Printf("%s submitted succesfully\n", flagStatus.Flag)
+					handler <- flagStatus.Flag
+				} else {
+					fmt.Printf("%s is not a valid flag\n", flagStatus.Flag)
+				}
 			}
 		}
 	}
