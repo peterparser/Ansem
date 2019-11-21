@@ -110,6 +110,7 @@ func submitHTTP(gameServer string, acceptedFlag string, flagChannel <-chan strin
 				log.Fatalf("SUBMITTER\tError Send Flag:\t Server %s\nTrace: %s\n", gameServer,err)
 			}
 			defer resp.Body.Close()
+			var flagResult []RuCtfFlag
 			//Parse response
 
 			err = json.NewDecoder(resp.Body).Decode(&flagResult)
