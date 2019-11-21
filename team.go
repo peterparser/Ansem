@@ -10,7 +10,7 @@ func GetTeamAsChan(fileTeam string) chan string {
 	teamChannel := make(chan string, 20)
 	file, err := os.Open(fileTeam)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("TEAM\t Error Team File:\t  %s \n",fileTeam)
 	}
 
 	var lines []string

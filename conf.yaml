@@ -1,9 +1,9 @@
 exploits_dir: "./expl/"
 tick: 1
 team_file : "team"
-gameserver: "https://dev.tripi.eu/ru.php"
+gameserver: ""
 workers: 8
 submission_type: "HTTP"
-flag_regex: "A.*"
+flag_regex: "B.*"
 flag_accepted: "true"
 token: ""
