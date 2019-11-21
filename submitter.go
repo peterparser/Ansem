@@ -6,26 +6,21 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
-	"net/http"
-//	"crypto/tls"
+	//	"crypto/tls"
 	"bytes"
 	"encoding/json"
-//	"io/ioutil"
+	//	"io/ioutil"
 )
-
 
 type RuCtfFlag struct {
 	Msg    string `json:"msg"`
 	Flag   string `json:"flag"`
 	Status bool   `json:"status"`
 }
-
-
-
-
 
 func StartSubmitter(submitterCtx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
@@ -65,7 +60,7 @@ func StartSubmitter(submitterCtx context.Context, wg *sync.WaitGroup) {
 	}()
 
 	//Start the submitter
-	go submitHandler[subType](gameServer, flagAccepted, flagChannel, mapWrite, token )
+	go submitHandler[subType](gameServer, flagAccepted, flagChannel, mapWrite, token)
 	//Check if the flags are already submitted
 	for flag := range toSubmit {
 		mapRead <- flag
@@ -82,24 +77,27 @@ func StartSubmitter(submitterCtx context.Context, wg *sync.WaitGroup) {
 }
 
 func submitHTTP(gameServer string, acceptedFlag string, flagChannel <-chan string, handler chan<- string, token string) {
-//	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	//	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	//Create the tcp connection
+	var flags []string
 	for {
 		select {
 		//Read the flag
 		case flag := <-flagChannel:
-			//Create json from flag
-			flagJson,err := json.Marshal([]string{flag})
+			flags = append(flags, flag)
+		//Create json from flag
+		case <-time.After(5 * time.Second):
+			flagJson, err := json.Marshal(flags)
 			if err != nil {
 
-				log.Fatalf("SUBMITTER\nError in json marshal with %s\nTrace: %s\n", gameServer,err)
+				log.Fatalf("SUBMITTER\nError in json marshal with %s\nTrace: %s\n", gameServer, err)
 			}
-			req, err := http.NewRequest("PUT",gameServer,bytes.NewBuffer(flagJson))
+			req, err := http.NewRequest("PUT", gameServer, bytes.NewBuffer(flagJson))
 			//Add headers
-			req.Header.Set("X-Team-Token",token)
+			req.Header.Set("X-Team-Token", token)
 			if err != nil {
-				log.Fatalf("SUBMITTER\tConnection Error HTTP:\t Server %s\n Trace:%s\n", gameServer,err)
+				log.Fatalf("SUBMITTER\tConnection Error HTTP:\t Server %s\n Trace:%s\n", gameServer, err)
 			}
 			//Send flag
 			client := &http.Client{
@@ -107,7 +105,7 @@ func submitHTTP(gameServer string, acceptedFlag string, flagChannel <-chan strin
 			}
 			resp, err := client.Do(req)
 			if err != nil {
-				log.Fatalf("SUBMITTER\tError Send Flag:\t Server %s\nTrace: %s\n", gameServer,err)
+				log.Fatalf("SUBMITTER\tError Send Flag:\t Server %s\nTrace: %s\n", gameServer, err)
 			}
 			defer resp.Body.Close()
 			var flagResult []RuCtfFlag
@@ -115,27 +113,27 @@ func submitHTTP(gameServer string, acceptedFlag string, flagChannel <-chan strin
 
 			err = json.NewDecoder(resp.Body).Decode(&flagResult)
 			if err != nil {
-				log.Fatalf("SUBMITTER\tError Unmarshalling Flag:\nTrace: %s\n",err)
+				log.Fatalf("SUBMITTER\tError Unmarshalling Flag:\nTrace: %s\n", err)
 			}
-			for _, flagStatus := range flagResult{
+			for _, flagStatus := range flagResult {
 				if flagStatus.Status {
 					handler <- flagStatus.Flag
 				} else {
 					log.Printf("SUBMITTER\tInvalid Flag:\t %s \n", flagStatus.Flag)
 				}
 			}
+			flags = nil
 		}
 	}
 
 }
-
 
 func submitNC(gameServer string, acceptedFlag string, flagChannel <-chan string, handler chan<- string, token string) {
 
 	//Create the tcp connection
 	connection, err := net.DialTimeout("tcp", gameServer, 10*time.Second)
 	if err != nil {
-		log.Fatalf("SUBMITTER\tConnection Error TCP:\t Server %s\n Trace:%s\n", gameServer,err)
+		log.Fatalf("SUBMITTER\tConnection Error TCP:\t Server %s\n Trace:%s\n", gameServer, err)
 	}
 	for {
 		//Buffered reader
@@ -159,7 +157,7 @@ func submitNC(gameServer string, acceptedFlag string, flagChannel <-chan string,
 			time.Sleep(10 * time.Second)
 			connection, err = net.DialTimeout("tcp", gameServer, 10*time.Second)
 			if err != nil {
-				log.Fatalf("SUBMITTER\tConnection Error TCP:\t Server %s\n Trace:%s\n", gameServer,err)
+				log.Fatalf("SUBMITTER\tConnection Error TCP:\t Server %s\n Trace:%s\n", gameServer, err)
 			}
 		}
 	}
