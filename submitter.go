@@ -10,16 +10,14 @@ import (
 	"sync"
 	"time"
 	"net/http"
-	"crypto/tls"
+//	"crypto/tls"
 	"bytes"
 	"encoding/json"
+//	"io/ioutil"
 )
 
 
-type RuCtf struct {
-	Reponses []FlagStatus
-}
-type FlagStatus struct {
+type RuCtfFlag struct {
 	Msg    string `json:"msg"`
 	Flag   string `json:"flag"`
 	Status bool   `json:"status"`
@@ -84,7 +82,7 @@ func StartSubmitter(submitterCtx context.Context, wg *sync.WaitGroup) {
 }
 
 func submitHTTP(gameServer string, acceptedFlag string, flagChannel <-chan string, handler chan<- string, token string) {
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+//	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	//Create the tcp connection
 	for {
@@ -94,6 +92,7 @@ func submitHTTP(gameServer string, acceptedFlag string, flagChannel <-chan strin
 			//Create json from flag
 			flagJson,err := json.Marshal([]string{flag})
 			if err != nil {
+
 				log.Fatalf("SUBMITTER\nError in json marshal with %s\nTrace: %s\n", gameServer,err)
 			}
 			req, err := http.NewRequest("PUT",gameServer,bytes.NewBuffer(flagJson))
@@ -110,14 +109,14 @@ func submitHTTP(gameServer string, acceptedFlag string, flagChannel <-chan strin
 			if err != nil {
 				log.Fatalf("SUBMITTER\tError Send Flag:\t Server %s\nTrace: %s\n", gameServer,err)
 			}
-			//fmt.Printf("Status: %s\n", resp.Status)
-			var flagResult RuCtf
-			//Parse response
-			json.NewDecoder(resp.Body).Decode(flagResult)
 			defer resp.Body.Close()
+			//Parse response
 
-			//fmt.Printf("response body%s\n",resp.Body)
-			for _, flagStatus := range flagResult.Reponses {
+			err = json.NewDecoder(resp.Body).Decode(&flagResult)
+			if err != nil {
+				log.Fatalf("SUBMITTER\tError Unmarshalling Flag:\nTrace: %s\n",err)
+			}
+			for _, flagStatus := range flagResult{
 				if flagStatus.Status {
 					handler <- flagStatus.Flag
 				} else {
