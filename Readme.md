@@ -27,5 +27,5 @@ workers: 8
 submission_type: "TCP"
 flag_regex: "\\d"
 flag_accepted: "ACCEPTED"
-token: "sonoCiccione"
+token: "some_kind_of_token"
 ```
