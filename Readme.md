@@ -1,8 +1,4 @@
-# Requirements
-YAML library
-```
-go get gopkg.in/yaml.v2
-```
+# Installation
 Then compile it with:
 ```
 go build -o ansem 

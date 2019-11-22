@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Ansem/internal"
 	"context"
 	"fmt"
 	"gopkg.in/yaml.v2"
@@ -26,7 +27,7 @@ type conf struct {
 // Function that initialize the config
 func (c *conf) getConf() *conf {
 
-	yamlFile, err := ioutil.ReadFile("conf.yaml")
+	yamlFile, err := ioutil.ReadFile("configs/conf.yaml")
 	if err != nil {
 		log.Printf("yamlFile.Get err   #%v ", err)
 	}
@@ -60,7 +61,7 @@ func main() {
 		"Workers:\t%d\n"+
 		"Token:\t%s\n",
 
-		c.Directory, c.GameServer, c.TeamFile, c.SubmissionType, c.FlagRegex, c.Tick, c.Workers,c.Token)
+		c.Directory, c.GameServer, c.TeamFile, c.SubmissionType, c.FlagRegex, c.Tick, c.Workers, c.Token)
 	writer.Flush()
 
 	toSubmit := make(chan string, 20)
@@ -84,8 +85,8 @@ func main() {
 	submitterCtx = context.WithValue(submitterCtx, "flagAccepted", c.FlagAccepted)
 	submitterCtx = context.WithValue(submitterCtx, "token", c.Token)
 
-	go StartExploiter(exploitCtx, &wg)
-	go StartSubmitter(submitterCtx, &wg)
+	go internal.StartExploiter(exploitCtx, &wg)
+	go internal.StartSubmitter(submitterCtx, &wg)
 
 	wg.Wait()
 }
