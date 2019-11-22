@@ -2,7 +2,9 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -10,9 +12,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	//	"crypto/tls"
-	"bytes"
-	"encoding/json"
 	//	"io/ioutil"
 )
 
@@ -88,41 +87,43 @@ func submitHTTP(gameServer string, acceptedFlag string, flagChannel <-chan strin
 			flags = append(flags, flag)
 		//Create json from flag
 		case <-time.After(5 * time.Second):
-			flagJson, err := json.Marshal(flags)
-			if err != nil {
+			if flags != nil {
+				flagJson, err := json.Marshal(flags)
+				if err != nil {
 
-				log.Fatalf("SUBMITTER\nError in json marshal with %s\nTrace: %s\n", gameServer, err)
-			}
-			req, err := http.NewRequest("PUT", gameServer, bytes.NewBuffer(flagJson))
-			//Add headers
-			req.Header.Set("X-Team-Token", token)
-			if err != nil {
-				log.Fatalf("SUBMITTER\tConnection Error HTTP:\t Server %s\n Trace:%s\n", gameServer, err)
-			}
-			//Send flag
-			client := &http.Client{
-				Timeout: time.Second * 5,
-			}
-			resp, err := client.Do(req)
-			if err != nil {
-				log.Fatalf("SUBMITTER\tError Send Flag:\t Server %s\nTrace: %s\n", gameServer, err)
-			}
-			defer resp.Body.Close()
-			var flagResult []RuCtfFlag
-			//Parse response
-
-			err = json.NewDecoder(resp.Body).Decode(&flagResult)
-			if err != nil {
-				log.Fatalf("SUBMITTER\tError Unmarshalling Flag:\nTrace: %s\n", err)
-			}
-			for _, flagStatus := range flagResult {
-				if flagStatus.Status {
-					handler <- flagStatus.Flag
-				} else {
-					log.Printf("SUBMITTER\tInvalid Flag:\t %s \n", flagStatus.Flag)
+					log.Fatalf("SUBMITTER\nError in json marshal with %s\nTrace: %s\n", gameServer, err)
 				}
+				req, err := http.NewRequest("PUT", gameServer, bytes.NewBuffer(flagJson))
+				//Add headers
+				req.Header.Set("X-Team-Token", token)
+				if err != nil {
+					log.Fatalf("SUBMITTER\tConnection Error HTTP:\t Server %s\n Trace:%s\n", gameServer, err)
+				}
+				//Send flag
+				client := &http.Client{
+					Timeout: time.Second * 5,
+				}
+				resp, err := client.Do(req)
+				if err != nil {
+					log.Fatalf("SUBMITTER\tError Send Flag:\t Server %s\nTrace: %s\n", gameServer, err)
+				}
+				defer resp.Body.Close()
+				var flagResult []RuCtfFlag
+				//Parse response
+
+				err = json.NewDecoder(resp.Body).Decode(&flagResult)
+				if err != nil {
+					log.Fatalf("SUBMITTER\tError Unmarshalling Flag:\nTrace: %s\n", err)
+				}
+				for _, flagStatus := range flagResult {
+					if flagStatus.Status {
+						handler <- flagStatus.Flag
+					} else {
+						log.Printf("SUBMITTER\tInvalid Flag:\t %s \n", flagStatus.Flag)
+					}
+				}
+				flags = nil
 			}
-			flags = nil
 		}
 	}
 
