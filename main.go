@@ -29,7 +29,7 @@ func (c *conf) getConf() *conf {
 
 	yamlFile, err := ioutil.ReadFile("configs/conf.yaml")
 	if err != nil {
-		log.Printf("yamlFile.Get err   #%v ", err)
+		log.Fatalf("yamlFile.Get err   #%v ", err)
 	}
 	err = yaml.Unmarshal(yamlFile, c)
 	if err != nil {
