@@ -17,42 +17,24 @@ func StartSubmitter(submitterCtx context.Context, wg *sync.WaitGroup) {
 	token := submitterCtx.Value("token").(string)
 
 	//Init submitters
-	var submitHandler = make(map[string]func(string, string, <-chan string, chan<- string, string))
+	var submitHandler = make(map[string]func(string, string, <-chan string, *sync.Map, string))
 	//Define submission method
 	submitHandler["TCP"] = submitters.RuCTFSubmitNC
 	submitHandler["HTTP"] = submitters.RuCTFSubmitHTTP
 
-	//Create a map to verify flags
-	submitted := make(map[string]bool)
+	//Create a thread safe map to verify flags
+	var submitted sync.Map
+
 	//Create channel to pass filtered flags
 	flagChannel := make(chan string, 10)
-	//Create the channel to communicate with the map handler
-	mapWrite := make(chan string)
-	mapRead := make(chan string)
-	mapGet := make(chan bool)
-
-	//Start the handler of the map
-	go func() {
-		for {
-			select {
-			case write := <-mapWrite:
-				submitted[write] = true
-			case read := <-mapRead:
-				_, found := submitted[read]
-				mapGet <- found
-			}
-		}
-	}()
 
 	//Start the submitter
-	go submitHandler[subType](gameServer, flagAccepted, flagChannel, mapWrite, token)
+	go submitHandler[subType](gameServer, flagAccepted, flagChannel, &submitted, token)
 	//Check if the flags are already submitted
 	for flag := range toSubmit {
-		mapRead <- flag
-		present := <-mapGet
 		//The regex is checked via exploiter
 		//If is present or doesn't match the flag regexp continue
-		if present {
+		if _, result := submitted.Load(flag); result {
 			log.Printf("SUBMITTER:\t flag %s already retrieved!\n", flag)
 			continue
 		} else {

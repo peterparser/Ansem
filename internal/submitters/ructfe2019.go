@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -18,7 +19,7 @@ type RuCtfFlag struct {
 	Status bool   `json:"status"`
 }
 
-func RuCTFSubmitHTTP(gameServer string, acceptedFlag string, flagChannel <-chan string, handler chan<- string, token string) {
+func RuCTFSubmitHTTP(gameServer string, acceptedFlag string, flagChannel <-chan string, alreadySubmitted *sync.Map, token string) {
 	//	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	//Create the tcp connection
@@ -60,7 +61,7 @@ func RuCTFSubmitHTTP(gameServer string, acceptedFlag string, flagChannel <-chan 
 				}
 				for _, flagStatus := range flagResult {
 					if flagStatus.Status {
-						handler <- flagStatus.Flag
+						alreadySubmitted.Store(flagStatus.Flag, true)
 					} else {
 						log.Printf("SUBMITTER\tInvalid Flag:\t %s \n", flagStatus.Flag)
 					}
@@ -72,7 +73,7 @@ func RuCTFSubmitHTTP(gameServer string, acceptedFlag string, flagChannel <-chan 
 
 }
 
-func RuCTFSubmitNC(gameServer string, acceptedFlag string, flagChannel <-chan string, handler chan<- string, token string) {
+func RuCTFSubmitNC(gameServer string, acceptedFlag string, flagChannel <-chan string, alreadySubmitted *sync.Map, token string) {
 
 	//Create the tcp connection
 	connection, err := net.DialTimeout("tcp", gameServer, 10*time.Second)
@@ -91,7 +92,7 @@ func RuCTFSubmitNC(gameServer string, acceptedFlag string, flagChannel <-chan st
 			response, _ := reader.ReadString('\n')
 			//If it's accepted, store it
 			if strings.Contains(response, acceptedFlag) {
-				handler <- flag
+				alreadySubmitted.Store(flag, true)
 
 			}
 			//After x seconds without flag, stop
