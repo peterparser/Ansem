@@ -7,7 +7,7 @@ go build -o ansem
 ![](https://github.com/PeterParser/Ansem/workflows/Go/badge.svg)
 
 # Configuration
-The configuration is stored in yaml file with the following (mandatory) attributes:
+The configuration is stored in **yaml file under the config directory, the file must me named conf.yaml** with the following (mandatory) attributes:
 * **exploits_dir**: Path to the directory that contains the exploits.
 * **tick**: The tick of the gameserver in minutes.
 * **team_file**: Path to a plain text file with the ip of the teams.

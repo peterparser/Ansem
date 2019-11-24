@@ -1,9 +1,0 @@
-exploits_dir: "./expl/"
-tick: 1
-team_file : "team"
-gameserver: ""
-workers: 8
-submission_type: "HTTP"
-flag_regex: "C.*"
-flag_accepted: "true"
-token: "sonoCiccione"
