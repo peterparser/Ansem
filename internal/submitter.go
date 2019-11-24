@@ -66,10 +66,12 @@ func StartSubmitter(submitterCtx context.Context, wg *sync.WaitGroup) {
 		present := <-mapGet
 		//The regex is checked via exploiter
 		//If is present or doesn't match the flag regexp continue
-		if present { //||  !matched {
+		if present {
+			log.Printf("SUBMITTER:\t flag %s already retrieved!\n", flag)
 			continue
 		} else {
 			flagChannel <- flag
+			log.Printf("SUBMITTER:\t flag %s is new, now i will send it!\n", flag)
 		}
 	}
 
