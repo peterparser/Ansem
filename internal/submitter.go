@@ -10,26 +10,20 @@ import (
 func StartSubmitter(submitterCtx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	gameServer := submitterCtx.Value("gameServer").(string)
-	toSubmit := submitterCtx.Value("submit").(chan string)
-	subType := submitterCtx.Value("subType").(string)
-	flagAccepted := submitterCtx.Value("flagAccepted").(string)
-	token := submitterCtx.Value("token").(string)
-
+	toSubmit := submitterCtx.Value("submit").(<-chan string)
 	//Init submitters
-	var submitHandler = make(map[string]func(string, string, <-chan string, *sync.Map, string))
-	//Define submission method
-	submitHandler["TCP"] = submitters.RuCTFSubmitNC
-	submitHandler["HTTP"] = submitters.RuCTFSubmitHTTP
+	submitFunction := submitters.RuCTFSubmitHTTP
 
 	//Create a thread safe map to verify flags
 	var submitted sync.Map
 
 	//Create channel to pass filtered flags
 	flagChannel := make(chan string, 10)
+	submitterCtx = context.WithValue(submitterCtx, "flagChannel", flagChannel)
+	submitterCtx = context.WithValue(submitterCtx, "alreadySubmitted", &submitted)
 
 	//Start the submitter
-	go submitHandler[subType](gameServer, flagAccepted, flagChannel, &submitted, token)
+	go submitFunction(submitterCtx)
 	//Check if the flags are already submitted
 	for flag := range toSubmit {
 		//The regex is checked via exploiter

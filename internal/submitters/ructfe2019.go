@@ -3,6 +3,7 @@ package submitters
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -19,10 +20,13 @@ type RuCtfFlag struct {
 	Status bool   `json:"status"`
 }
 
-func RuCTFSubmitHTTP(gameServer string, acceptedFlag string, flagChannel <-chan string, alreadySubmitted *sync.Map, token string) {
-	//	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+func RuCTFSubmitHTTP(submitCtx context.Context) {
 
-	//Create the tcp connection
+	flagChannel := submitCtx.Value("flagChannel").(<-chan string)
+	gameServer := submitCtx.Value("gameServer").(string)
+	token := submitCtx.Value("token").(string)
+	alreadySubmitted := submitCtx.Value("alreadySubmitted").(*sync.Map)
+
 	var flags []string
 	for {
 		select {
@@ -73,6 +77,9 @@ func RuCTFSubmitHTTP(gameServer string, acceptedFlag string, flagChannel <-chan 
 
 }
 
+/*
+Old type of submission
+*/
 func RuCTFSubmitNC(gameServer string, acceptedFlag string, flagChannel <-chan string, alreadySubmitted *sync.Map, token string) {
 
 	//Create the tcp connection
